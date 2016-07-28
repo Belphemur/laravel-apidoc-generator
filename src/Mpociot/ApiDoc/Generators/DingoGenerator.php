@@ -2,7 +2,9 @@
 
 namespace Mpociot\ApiDoc\Generators;
 
+use Dingo\Api\Routing\Router;
 use Exception;
+use Illuminate\Http\Request;
 
 class DingoGenerator extends AbstractGenerator
 {
@@ -54,4 +56,21 @@ class DingoGenerator extends AbstractGenerator
     {
         return $route->uri();
     }
-}
+
+    /**
+     * get the root resolver for the given route string
+     *
+     * @param $route
+     * @param $bindings
+     *
+     * @return \Closure
+     */
+    protected function getRouteResolver($route, $bindings)
+    {
+        /**
+         * @var $request Request
+         */
+        $request = app('request')->create(action($route, $bindings));
+        app(Router::class)->dispatchToRoute($request);
+        return $request->getRouteResolver();
+    }}

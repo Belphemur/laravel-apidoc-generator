@@ -150,12 +150,7 @@ abstract class AbstractGenerator
                     // Add route parameter bindings
                     $parameterReflection->query->add($bindings);
                     $parameterReflection->request->add($bindings);
-                    /**
-                     * @var $request Request
-                     */
-                    $request = app('request')->create(action($route, $bindings));
-                    app('router')->dispatchToRoute($request);
-                    $parameterReflection->setRouteResolver($request->getRouteResolver());
+                    $parameterReflection->setRouteResolver($this->getRouteResolver($route, $bindings));
 
                     if (method_exists($parameterReflection, 'validator')) {
                         return $parameterReflection->validator()->getRules();
@@ -168,6 +163,15 @@ abstract class AbstractGenerator
 
         return [];
     }
+
+    /**
+     * get the root resolver for the given route string
+     * @param $route
+     * @param $bindings
+     *
+     * @return \Closure
+     */
+    protected abstract function getRouteResolver($route, $bindings);
 
     /**
      * @param  array  $arr

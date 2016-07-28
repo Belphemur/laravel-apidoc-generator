@@ -88,4 +88,23 @@ class LaravelGenerator extends AbstractGenerator
 
         return $response;
     }
+
+    /**
+     * get the root resolver for the given route string
+     *
+     * @param $route
+     * @param $bindings
+     *
+     * @return \Closure
+     */
+    protected function getRouteResolver($route, $bindings)
+    {
+        /**
+         * @var $request \Illuminate\Http\Request
+         */
+        $request = app('request')->create(action($route, $bindings));
+        app('router')->dispatchToRoute($request);
+
+        return $request->getRouteResolver();
+    }
 }
