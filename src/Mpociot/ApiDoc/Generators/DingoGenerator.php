@@ -5,6 +5,7 @@ namespace Mpociot\ApiDoc\Generators;
 use Dingo\Api\Routing\Router;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DingoGenerator extends AbstractGenerator
 {
@@ -17,28 +18,34 @@ class DingoGenerator extends AbstractGenerator
      */
     public function processRoute($route, $bindings = [], $withResponse = true)
     {
-        $response = '';
+        try {
+            DB::beginTransaction();
 
-        if ($withResponse) {
-            try {
-                $response = $this->getRouteResponse($route, $bindings);
-            } catch (Exception $e) {
+            $response = '';
+
+            if ($withResponse) {
+                try {
+                    $response = $this->getRouteResponse($route, $bindings);
+                } catch (Exception $e) {
+                }
             }
+
+            $routeAction      = $route->getAction();
+            $routeGroup       = $this->getRouteGroup($routeAction['uses']);
+            $routeDescription = $this->getRouteDescription($routeAction['uses']);
+
+            return $this->getParameters([
+                'resource'    => $routeGroup,
+                'title'       => $routeDescription['short'],
+                'description' => $routeDescription['long'],
+                'methods'     => $route->getMethods(),
+                'uri'         => $route->uri(),
+                'parameters'  => [],
+                'response'    => $response,
+            ], $routeAction, $bindings);
+        } finally {
+            DB::rollBack();
         }
-
-        $routeAction = $route->getAction();
-        $routeGroup = $this->getRouteGroup($routeAction['uses']);
-        $routeDescription = $this->getRouteDescription($routeAction['uses']);
-
-        return $this->getParameters([
-            'resource' => $routeGroup,
-            'title' => $routeDescription['short'],
-            'description' => $routeDescription['long'],
-            'methods' => $route->getMethods(),
-            'uri' => $route->uri(),
-            'parameters' => [],
-            'response' => $response,
-        ], $routeAction, $bindings);
     }
 
     /**

@@ -4,6 +4,7 @@ namespace Mpociot\ApiDoc\Generators;
 
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
 
 class LaravelGenerator extends AbstractGenerator
@@ -27,31 +28,37 @@ class LaravelGenerator extends AbstractGenerator
      */
     public function processRoute($route, $bindings = [], $withResponse = true)
     {
-        $response = '';
+        try {
+            DB::beginTransaction();
 
-        if ($withResponse) {
-            $response = $this->getRouteResponse($route, $bindings);
+            $response = '';
+
+            if ($withResponse) {
+                $response = $this->getRouteResponse($route, $bindings);
+            }
+
+            $routeAction      = $route->getAction();
+            $routeGroup       = $this->getRouteGroup($routeAction['uses']);
+            $routeDescription = $this->getRouteDescription($routeAction['uses']);
+
+            if ($response->headers->get('Content-Type') === 'application/json') {
+                $content = json_encode(json_decode($response->getContent()), JSON_PRETTY_PRINT);
+            } else {
+                $content = $response->getContent();
+            }
+
+            return $this->getParameters([
+                'resource'    => $routeGroup,
+                'title'       => $routeDescription['short'],
+                'description' => $routeDescription['long'],
+                'methods'     => $route->getMethods(),
+                'uri'         => $route->getUri(),
+                'parameters'  => [],
+                'response'    => $content,
+            ], $routeAction, $bindings);
+        } finally {
+            DB::rollBack();
         }
-
-        $routeAction = $route->getAction();
-        $routeGroup = $this->getRouteGroup($routeAction['uses']);
-        $routeDescription = $this->getRouteDescription($routeAction['uses']);
-
-        if ($response->headers->get('Content-Type') === 'application/json') {
-            $content = json_encode(json_decode($response->getContent()), JSON_PRETTY_PRINT);
-        } else {
-            $content = $response->getContent();
-        }
-
-        return $this->getParameters([
-            'resource' => $routeGroup,
-            'title' => $routeDescription['short'],
-            'description' => $routeDescription['long'],
-            'methods' => $route->getMethods(),
-            'uri' => $route->getUri(),
-            'parameters' => [],
-            'response' => $content,
-        ], $routeAction, $bindings);
     }
 
     /**
