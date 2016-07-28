@@ -4,6 +4,7 @@ namespace Mpociot\ApiDoc\Generators;
 
 use Faker\Factory;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Mpociot\ApiDoc\Parsers\RuleDescriptionParser as Description;
@@ -149,6 +150,12 @@ abstract class AbstractGenerator
                     // Add route parameter bindings
                     $parameterReflection->query->add($bindings);
                     $parameterReflection->request->add($bindings);
+                    /**
+                     * @var $request Request
+                     */
+                    $request = app('request')->create(action($route, $bindings));
+                    app('router')->dispatchToRoute($request);
+                    $parameterReflection->setRouteResolver($request->getRouteResolver());
 
                     if (method_exists($parameterReflection, 'validator')) {
                         return $parameterReflection->validator()->getRules();
