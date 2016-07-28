@@ -38,7 +38,7 @@ abstract class AbstractGenerator
      */
     protected function getParameters($routeData, $routeAction, $bindings)
     {
-        $validator = Validator::make([], $this->getRouteRules($routeAction['uses'], $bindings));
+        $validator = Validator::make([], $this->getRouteRules($routeAction['uses'], $routeData['methods'][0], $bindings));
         foreach ($validator->getRules() as $attribute => $rules) {
             $attributeData = [
                 'required' => false,
@@ -129,12 +129,13 @@ abstract class AbstractGenerator
     }
 
     /**
-     * @param  $route
+     * @param        $route
+     * @param        $routeMethod
      * @param  array $bindings
      *
      * @return array
      */
-    protected function getRouteRules($route, $bindings)
+    protected function getRouteRules($route, $routeMethod, $bindings)
     {
         list($class, $method) = explode('@', $route);
         $reflection = new ReflectionClass($class);
@@ -150,7 +151,7 @@ abstract class AbstractGenerator
                     // Add route parameter bindings
                     $parameterReflection->query->add($bindings);
                     $parameterReflection->request->add($bindings);
-                    $parameterReflection->setRouteResolver($this->getRouteResolver($route, $bindings));
+                    $parameterReflection->setRouteResolver($this->getRouteResolver($route, $routeMethod, $bindings));
 
                     if (method_exists($parameterReflection, 'validator')) {
                         return $parameterReflection->validator()->getRules();
@@ -166,12 +167,14 @@ abstract class AbstractGenerator
 
     /**
      * get the root resolver for the given route string
+     *
      * @param $route
+     * @param $routeMethod
      * @param $bindings
      *
      * @return \Closure
      */
-    protected abstract function getRouteResolver($route, $bindings);
+    protected abstract function getRouteResolver($route, $routeMethod, $bindings);
 
     /**
      * @param  array  $arr

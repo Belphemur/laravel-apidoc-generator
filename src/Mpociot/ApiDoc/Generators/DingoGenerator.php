@@ -19,7 +19,11 @@ class DingoGenerator extends AbstractGenerator
     public function processRoute($route, $bindings = [], $withResponse = true)
     {
         try {
-            DB::beginTransaction();
+            try {
+                DB::beginTransaction();
+            } catch (\Exception $e) {
+
+            }
 
             $response = '';
 
@@ -44,7 +48,11 @@ class DingoGenerator extends AbstractGenerator
                 'response'    => $response,
             ], $routeAction, $bindings);
         } finally {
-            DB::rollBack();
+            try {
+                DB::rollBack();
+            } catch (\Exception $e) {
+
+            }
         }
     }
 
@@ -68,16 +76,18 @@ class DingoGenerator extends AbstractGenerator
      * get the root resolver for the given route string
      *
      * @param $route
+     * @param $routeMethod
      * @param $bindings
      *
      * @return \Closure
      */
-    protected function getRouteResolver($route, $bindings)
+    protected function getRouteResolver($route, $routeMethod, $bindings)
     {
         /**
          * @var $request Request
          */
-        $request = app('request')->create(action($route, $bindings));
-        app(Router::class)->dispatchToRoute($request);
+        $request = app('request')->create(action($route, $bindings), $routeMethod);
+        $requestDingo =  (new \Dingo\Api\Http\Request)->createFromIlluminate($request);
+        app(Router::class)->dispatch($requestDingo);
         return $request->getRouteResolver();
     }}

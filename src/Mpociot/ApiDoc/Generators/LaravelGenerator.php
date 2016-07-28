@@ -29,7 +29,11 @@ class LaravelGenerator extends AbstractGenerator
     public function processRoute($route, $bindings = [], $withResponse = true)
     {
         try {
-            DB::beginTransaction();
+            try {
+                DB::beginTransaction();
+            } catch (\Exception $e) {
+
+            }
 
             $response = '';
 
@@ -57,7 +61,12 @@ class LaravelGenerator extends AbstractGenerator
                 'response'    => $content,
             ], $routeAction, $bindings);
         } finally {
-            DB::rollBack();
+            try {
+                DB::rollBack();
+            } catch (\Exception $e) {
+
+            }
+
         }
     }
 
@@ -100,16 +109,17 @@ class LaravelGenerator extends AbstractGenerator
      * get the root resolver for the given route string
      *
      * @param $route
+     * @param $routeMethod
      * @param $bindings
      *
      * @return \Closure
      */
-    protected function getRouteResolver($route, $bindings)
+    protected function getRouteResolver($route, $routeMethod, $bindings)
     {
         /**
          * @var $request \Illuminate\Http\Request
          */
-        $request = app('request')->create(action($route, $bindings));
+        $request = app('request')->create(action($route, $bindings), $routeMethod);
         app('router')->dispatchToRoute($request);
 
         return $request->getRouteResolver();
