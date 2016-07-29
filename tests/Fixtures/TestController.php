@@ -31,6 +31,11 @@ class TestController extends Controller
         return '';
     }
 
+    public function addRouteBindingsToRequestSpecialClass(DynamicRequestOwnValidator $request)
+    {
+        return '';
+    }
+
     public function fetchRouteResponse()
     {
         $fixture = new \stdClass();

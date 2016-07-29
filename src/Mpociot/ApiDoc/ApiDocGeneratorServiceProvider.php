@@ -5,6 +5,7 @@ namespace Mpociot\ApiDoc;
 use Illuminate\Support\ServiceProvider;
 use Mpociot\ApiDoc\Commands\UpdateDocumentation;
 use Mpociot\ApiDoc\Commands\GenerateDocumentation;
+use Mpociot\ApiDoc\Validators\ValidatorRegistry;
 
 class ApiDocGeneratorServiceProvider extends ServiceProvider
 {
@@ -41,6 +42,10 @@ class ApiDocGeneratorServiceProvider extends ServiceProvider
             'apidoc.generate',
             'apidoc.update',
         ]);
+
+        $this->app->singleton('apidoc.validatorRegistry', function () {
+            return new ValidatorRegistry();
+        });
     }
 
     /**

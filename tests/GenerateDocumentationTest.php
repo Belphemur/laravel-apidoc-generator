@@ -2,10 +2,12 @@
 
 namespace Mpociot\ApiDoc\Tests;
 
+use Dingo\Api\Auth\Provider\Basic;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Routing\Route;
 use Mpociot\ApiDoc\ApiDocGeneratorServiceProvider;
 use Mpociot\ApiDoc\Generators\LaravelGenerator;
+use Mpociot\ApiDoc\Tests\Fixtures\BasicValidator;
 use Orchestra\Testbench\TestCase;
 use Mpociot\ApiDoc\Tests\Fixtures\TestController;
 use Illuminate\Support\Facades\Route as RouteFacade;
@@ -83,6 +85,22 @@ class GenerateDocumentationTest extends TestCase
         $generatedMarkdown = file_get_contents(__DIR__.'/../public/docs/source/index.md');
 
         $this->assertContains('Not in: `bar`', $generatedMarkdown);
+    }
+
+    public function testAddsBindingsToGetRouteRulesWithOwnValidator()
+    {
+        RouteFacade::get('/api/test/{foo}', TestController::class.'@addRouteBindingsToRequestSpecialClass');
+        app('apidoc.validatorRegistry')->register(new BasicValidator());
+
+        $this->artisan('api:generate', [
+            '--routePrefix' => 'api/*',
+            '--bindings' => 'foo,bar',
+        ]);
+
+        $generatedMarkdown = file_get_contents(__DIR__.'/../public/docs/source/index.md');
+
+        $this->assertContains('Must be a test of value: working', $generatedMarkdown);
+        $this->assertContains('"validatorTesting"="test"', $generatedMarkdown);
     }
 
     public function testGeneratedPostmanCollectionFileIsCorrect()

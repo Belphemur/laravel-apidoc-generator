@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Mpociot\ApiDoc\Parsers\RuleDescriptionParser as Description;
+use Mpociot\ApiDoc\Validators\ValidatorRegistry;
 use ReflectionClass;
 use Mpociot\Reflection\DocBlock;
 
@@ -359,11 +360,26 @@ abstract class AbstractGenerator
                 $attributeData['value'] = $faker->ipv4;
                 $attributeData['type'] = $rule;
                 break;
+            default:
+                /**
+                 * @var $validatorRegistry ValidatorRegistry
+                 */
+                $validatorRegistry = app('apidoc.validatorRegistry');
+                if($validatorRegistry->hasValidator($rule)) {
+                    $validator = $validatorRegistry->getValidator($rule);
+                    $attributeData['description'][] = $validator->description($parameters);
+                    $values = $validator->possibleValidValues();
+                    $index = mt_rand(0, count($values)-1);
+                    $attributeData['value'] = $values[$index];
+                }
+                break;
         }
 
         if ($attributeData['value'] === '') {
             $attributeData['value'] = $faker->word;
         }
+
+
     }
 
     /**
