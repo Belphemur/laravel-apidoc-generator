@@ -31,7 +31,7 @@ class ValidatorRegistry
      */
     public function register(IValidator $validator)
     {
-        $this->validators[Str::lower($validator::keyword())] = $validator;
+        $this->validators[$this->getKey($validator::keyword())] = $validator;
     }
 
     /**
@@ -41,7 +41,7 @@ class ValidatorRegistry
      */
     public function unRegister(IValidator $validator)
     {
-        unset($this->validators[Str::lower($validator::keyword())]);
+        unset($this->validators[$this->getKey($validator::keyword())]);
     }
 
     /**
@@ -53,7 +53,7 @@ class ValidatorRegistry
      */
     public function getValidator(string $rule)
     {
-        return $this->validators[Str::lower($rule)];
+        return $this->validators[$this->getKey($rule)];
     }
 
     /**
@@ -65,6 +65,16 @@ class ValidatorRegistry
      */
     public function hasValidator(string $rule)
     {
-        return isset($this->validators[Str::lower($rule)]);
+        return isset($this->validators[$this->getKey($rule)]);
+    }
+
+    /**
+     * @param string $rule
+     *
+     * @return string
+     */
+    protected function getKey(string $rule)
+    {
+        return Str::lower($rule);
     }
 }
