@@ -369,8 +369,10 @@ abstract class AbstractGenerator
                     $validator = $validatorRegistry->getValidator($rule);
                     $attributeData['description'][] = $validator->description($parameters);
                     $values = $validator->possibleValidValues();
-                    $index = mt_rand(0, count($values)-1);
-                    $attributeData['value'] = $values[$index];
+                    if (count($values)) {
+                        $index                  = mt_rand(0, count($values) - 1);
+                        $attributeData['value'] = $values[$index];
+                    }
                 }
                 break;
         }
